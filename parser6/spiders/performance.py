@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 from typing import Any
 from urllib.parse import urlencode, urljoin
 
@@ -69,12 +70,15 @@ class PerformanceSpider(scrapy.Spider):
             )
 
     def parse(self, response, keyword, index):
-        products = response.css(".cs-product-gallery__item")
+        products = response.css(".b-product-gallery__item")
 
         for product in products:
-            product = product.get()
+            product_html = product.get()
 
-            if keyword in product:
+            if (
+                re.search(rf"\b{re.escape(keyword)}\b", product_html)
+                and "В наявності" in product_html
+            ):
                 self.logger.info("Item[%s] Keyword %s is in stock" % (index, keyword))
                 return {
                     "Производитель": self.keywords[keyword],
